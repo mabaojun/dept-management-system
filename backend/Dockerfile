@@ -6,6 +6,8 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY app ./app
+COPY docker-entrypoint.sh /app/docker-entrypoint.sh
+RUN chmod +x /app/docker-entrypoint.sh
 
 EXPOSE 9000
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "9000"]
+ENTRYPOINT ["/app/docker-entrypoint.sh"]

@@ -1,8 +1,12 @@
 <script setup lang="ts">
-import { nextTick, onMounted, onUnmounted, ref } from 'vue'
+import { computed, nextTick, onMounted, onUnmounted, ref } from 'vue'
 import * as echarts from 'echarts'
 import { dashboardSummary } from '@/api'
 import type { DashboardSummary } from '@/api/types'
+import { useIsMobile } from '@/composables/useIsMobile'
+
+const { isMobile } = useIsMobile()
+const chartHeight = computed(() => (isMobile.value ? '220px' : '260px'))
 
 const summary = ref<DashboardSummary | null>(null)
 
@@ -113,42 +117,42 @@ onUnmounted(() => window.removeEventListener('resize', onResize))
 <template>
   <div>
     <el-row :gutter="16" class="page-card">
-      <el-col :span="6">
+      <el-col :xs="12" :span="6">
         <el-card shadow="never"><el-statistic title="任务总数" :value="summary?.task_total ?? 0" /></el-card>
       </el-col>
-      <el-col :span="6">
+      <el-col :xs="12" :span="6">
         <el-card shadow="never"><el-statistic title="已完成" :value="summary?.task_done ?? 0" /></el-card>
       </el-col>
-      <el-col :span="6">
+      <el-col :xs="12" :span="6">
         <el-card shadow="never">
           <el-statistic title="完成率" :value="((summary?.completion_rate ?? 0) * 100).toFixed(1)" suffix="%" />
         </el-card>
       </el-col>
-      <el-col :span="6">
+      <el-col :xs="12" :span="6">
         <el-card shadow="never"><el-statistic title="本月日志数" :value="summary?.worklog_month_count ?? 0" /></el-card>
       </el-col>
     </el-row>
 
     <el-row :gutter="16" class="page-card">
-      <el-col :span="8">
+      <el-col :xs="24" :span="8">
         <el-card shadow="never">
           <template #header>任务状态分布</template>
-          <div ref="pieEl" style="height: 260px" />
+          <div ref="pieEl" :style="{ height: chartHeight }" />
         </el-card>
       </el-col>
-      <el-col :span="16">
+      <el-col :xs="24" :span="16">
         <el-card shadow="never">
           <template #header>近 14 天完成任务趋势</template>
-          <div ref="trendEl" style="height: 260px" />
+          <div ref="trendEl" :style="{ height: chartHeight }" />
         </el-card>
       </el-col>
     </el-row>
 
     <el-row v-if="summary?.member_load?.length" :gutter="16" class="page-card">
-      <el-col :span="24">
+      <el-col :xs="24" :span="24">
         <el-card shadow="never">
           <template #header>成员任务负载</template>
-          <div ref="loadEl" style="height: 240px" />
+          <div ref="loadEl" :style="{ height: isMobile ? '300px' : '240px' }" />
         </el-card>
       </el-col>
     </el-row>

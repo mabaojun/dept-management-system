@@ -2,6 +2,9 @@
 __pycache__/
 *.pyc
 dev.db
+seed/
 node_modules/
 dist/
 .env
+*.tsbuildinfo
+*.tar.gz

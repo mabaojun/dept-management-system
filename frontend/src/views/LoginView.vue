@@ -181,7 +181,7 @@ async function submit() {
 .login-card {
   position: relative;
   z-index: 1;
-  width: 400px;
+  width: min(400px, 92vw);
   padding: 10px 14px 18px;
   border-radius: 22px;
   border: 3px solid #2f6f2f;
@@ -233,5 +233,28 @@ async function submit() {
 .go-btn:active {
   transform: translateY(3px);
   box-shadow: 0 2px 0 #3c8c31;
+}
+
+/* 手机端缩小装饰与标题 */
+@media (max-width: 768px) {
+  .sun {
+    top: 24px;
+    right: 24px;
+    width: 76px;
+    height: 76px;
+  }
+  .hills {
+    height: 26vh;
+  }
+  .login-head h2 {
+    font-size: 20px;
+  }
+  .sheep {
+    width: 84px;
+    height: 72px;
+  }
+  .slogan {
+    font-size: 12px;
+  }
 }
 </style>

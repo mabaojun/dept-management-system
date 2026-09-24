@@ -83,7 +83,7 @@ onMounted(async () => {
     </div>
 
     <el-row :gutter="16">
-      <el-col :span="6">
+      <el-col :xs="24" :span="6">
         <el-card shadow="never" v-loading="loading">
           <template #header>历史意见</template>
           <el-empty v-if="!reviews.length" description="暂无记录" :image-size="60" />
@@ -100,7 +100,7 @@ onMounted(async () => {
         </el-card>
       </el-col>
 
-      <el-col :span="18">
+      <el-col :xs="24" :span="18">
         <el-card shadow="never">
           <template #header>
             <span v-if="active">参考意见 · {{ active.month }}</span>

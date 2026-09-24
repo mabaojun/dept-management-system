@@ -12,6 +12,7 @@ services:
       LLM_MODEL: ${LLM_MODEL:-deepseek-chat}
     volumes:
       - backend-data:/data
+      - ./seed:/seed:ro
     ports:
       - "9000:9000"
 

@@ -2,13 +2,18 @@
 import { ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { DataAnalysis, Document, Odometer, Setting, Tickets, User, Monitor } from '@element-plus/icons-vue'
+import { DataAnalysis, Document, Odometer, Setting, Tickets, User, Monitor, Menu as MenuIcon } from '@element-plus/icons-vue'
 import { useAuthStore } from '@/stores/auth'
 import { changePassword } from '@/api'
+import { useIsMobile } from '@/composables/useIsMobile'
 
 const auth = useAuthStore()
 const route = useRoute()
 const router = useRouter()
+const { isMobile } = useIsMobile()
+
+// 手机端侧边栏抽屉
+const drawerVisible = ref(false)
 
 const menuItems = [
   { index: '/dashboard', title: '数据看板', icon: Odometer },
@@ -64,11 +69,16 @@ function onCommand(cmd: string) {
     openPwdDialog()
   }
 }
+
+function onMenuSelect() {
+  if (isMobile.value) drawerVisible.value = false
+}
 </script>
 
 <template>
   <el-container style="height: 100vh">
-    <el-aside width="220px" style="background: #001529">
+    <!-- 桌面端固定侧边栏 -->
+    <el-aside v-if="!isMobile" width="220px" style="background: #001529">
       <div class="logo">
         <el-icon :size="20" color="#7ed957"><Monitor /></el-icon>
         <span>青青草原牛马管理系统</span>
@@ -80,6 +90,7 @@ function onCommand(cmd: string) {
         text-color="#a6adb4"
         active-text-color="#ffffff"
         style="border-right: none"
+        @select="onMenuSelect"
       >
         <el-menu-item v-for="item in visibleItems" :key="item.index" :index="item.index">
           <el-icon><component :is="item.icon" /></el-icon>
@@ -88,13 +99,42 @@ function onCommand(cmd: string) {
       </el-menu>
     </el-aside>
 
+    <!-- 手机端抽屉侧边栏 -->
+    <el-drawer v-if="isMobile" v-model="drawerVisible" direction="ltr" size="220px" :with-header="false">
+      <div style="background: #001529; height: 100%">
+        <div class="logo">
+          <el-icon :size="20" color="#7ed957"><Monitor /></el-icon>
+          <span style="font-size: 14px">青青草原牛马管理系统</span>
+        </div>
+        <el-menu
+          :default-active="route.path"
+          router
+          background-color="#001529"
+          text-color="#a6adb4"
+          active-text-color="#ffffff"
+          style="border-right: none"
+          @select="onMenuSelect"
+        >
+          <el-menu-item v-for="item in visibleItems" :key="item.index" :index="item.index">
+            <el-icon><component :is="item.icon" /></el-icon>
+            <span>{{ item.title }}</span>
+          </el-menu-item>
+        </el-menu>
+      </div>
+    </el-drawer>
+
     <el-container>
       <el-header height="56px" class="header">
-        <span class="page-title" style="margin: 0">{{ route.meta.title }}</span>
+        <div class="header-left">
+          <el-icon v-if="isMobile" class="burger" :size="20" @click="drawerVisible = true">
+            <MenuIcon />
+          </el-icon>
+          <span class="page-title" style="margin: 0">{{ route.meta.title }}</span>
+        </div>
         <el-dropdown @command="onCommand">
           <span class="user-chip">
             {{ auth.user?.name }}
-            <el-tag size="small" type="info">{{ roleLabel[auth.user?.role ?? ''] }}</el-tag>
+            <el-tag v-if="!isMobile" size="small" type="info">{{ roleLabel[auth.user?.role ?? ''] }}</el-tag>
           </span>
           <template #dropdown>
             <el-dropdown-menu>
@@ -104,7 +144,7 @@ function onCommand(cmd: string) {
           </template>
         </el-dropdown>
       </el-header>
-      <el-main style="padding: 16px 20px">
+      <el-main :style="isMobile ? 'padding: 12px' : 'padding: 16px 20px'">
         <router-view />
       </el-main>
     </el-container>
@@ -146,6 +186,22 @@ function onCommand(cmd: string) {
   justify-content: space-between;
   background: #fff;
   border-bottom: 1px solid #e4e7ed;
+}
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+.burger {
+  cursor: pointer;
+  color: #303133;
+  flex-shrink: 0;
+}
+.page-title {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .user-chip {
   display: flex;

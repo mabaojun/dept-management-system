@@ -222,13 +222,13 @@ onMounted(async () => {
             </div>
             <p class="report-summary">{{ r.content.summary }}</p>
             <el-row v-if="r.content.highlights?.length || r.content.risks?.length" :gutter="16">
-              <el-col v-if="r.content.highlights?.length" :span="12">
+              <el-col v-if="r.content.highlights?.length" :xs="24" :span="12">
                 <p class="block-title success">亮点</p>
                 <ul class="block-list">
                   <li v-for="(h, i) in r.content.highlights" :key="i">{{ h }}</li>
                 </ul>
               </el-col>
-              <el-col v-if="r.content.risks?.length" :span="12">
+              <el-col v-if="r.content.risks?.length" :xs="24" :span="12">
                 <p class="block-title danger">风险与关注</p>
                 <ul class="block-list">
                   <li v-for="(k, i) in r.content.risks" :key="i">{{ k }}</li>
