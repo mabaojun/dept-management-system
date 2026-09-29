@@ -61,6 +61,8 @@ class TaskCreate(BaseModel):
     title: str
     description: str = ""
     assignee_id: int
+    # 协作人：创建时按负责人+每位协作人生成各自独立的任务
+    collaborator_ids: list[int] = []
     priority: str = "mid"
     due_date: date | None = None
 

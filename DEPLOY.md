@@ -49,8 +49,10 @@ cd /Users/goofy/项目/联通部门管理系统
 2. 执行前端构建校验（类型检查不过则中止打包）
 3. 按规范命名压缩到 `/Users/goofy/项目/bmms-vX.Y.Z-日期.tar.gz`
 
-包内**包含**：全部源码、`docker-compose.yml`、`seed/dev.db`、`VERSION`。
-包内**不包含**：`node_modules`、`.venv`、构建产物、`.git`、`.env`、`backend/dev.db`（开发库本体）。
+包内**包含**：全部源码、`docker-compose.yml`、`seed/dev.db`、`VERSION`、`.env`（LLM 密钥随包分发，走 scp 加密传输；服务器解压后 compose 自动读取，**不要在公网网页端提交密钥**）。
+包内**不包含**：`node_modules`、`.venv`、构建产物、`.git`、`backend/dev.db`（开发库本体）。
+
+> 注意：`.env` 中**禁止**配置 `DATABASE_URL`，否则会覆盖 compose 默认值 `sqlite:////data/dev.db`，导致数据不落数据卷。LLM 配置优先级：网页设置（DB）> `.env`；只要从未在网页保存过 API Key，`.env` 即为生效配置。
 
 ## 4. 服务器升级流程（标准 7 步）
 

@@ -43,7 +43,14 @@ const priorityTag: Record<string, string> = { urgent: 'danger', high: 'warning',
 // 创建/编辑对话框
 const dialogVisible = ref(false)
 const editing = ref<TaskOut | null>(null)
-const form = ref({ title: '', description: '', assignee_id: undefined as number | undefined, priority: 'mid', due_date: '' })
+const form = ref({
+  title: '',
+  description: '',
+  assignee_id: undefined as number | undefined,
+  collaborator_ids: [] as number[],
+  priority: 'mid',
+  due_date: '',
+})
 
 const userMap = computed(() => Object.fromEntries(users.value.map((u) => [u.id, u.name])))
 
@@ -111,7 +118,15 @@ async function reload() {
 
 function openCreate() {
   editing.value = null
-  form.value = { title: '', description: '', assignee_id: undefined, priority: 'mid', due_date: '' }
+  form.value = {
+    title: '',
+    description: '',
+    // 成员只能给自己建任务，负责人固定为本人
+    assignee_id: auth.isManager ? undefined : auth.user?.id,
+    collaborator_ids: [],
+    priority: 'mid',
+    due_date: '',
+  }
   dialogVisible.value = true
 }
 
@@ -121,6 +136,7 @@ function openEdit(task: TaskOut) {
     title: task.title,
     description: task.description,
     assignee_id: task.assignee_id,
+    collaborator_ids: [],
     priority: task.priority,
     due_date: task.due_date ?? '',
   }
@@ -133,16 +149,19 @@ async function submitForm() {
   const body: Record<string, unknown> = {
     title: form.value.title.trim(),
     description: form.value.description,
+    collaborator_ids: form.value.collaborator_ids,
     priority: form.value.priority,
     due_date: form.value.due_date || null,
   }
-  if (form.value.assignee_id) body.assignee_id = form.value.assignee_id
+  body.assignee_id = auth.isManager ? form.value.assignee_id : auth.user?.id
   if (editing.value) {
+    delete body.collaborator_ids
     await updateTask(editing.value.id, body)
     ElMessage.success('任务已更新')
   } else {
-    await createTask(body as never)
-    ElMessage.success('任务已创建')
+    const created = await createTask(body as never)
+    const n = created.length
+    ElMessage.success(n > 1 ? `任务已创建，负责人与协作人共生成 ${n} 条独立任务` : '任务已创建')
   }
   dialogVisible.value = false
   reload()
@@ -191,7 +210,8 @@ async function doReopen(task: TaskOut) {
 }
 
 onMounted(async () => {
-  if (auth.isManager) users.value = await listUsers()
+  // 成员名单全员加载：协作人选择与负责人列显示均需要
+  users.value = await listUsers()
   await reload()
 })
 </script>
@@ -214,7 +234,7 @@ onMounted(async () => {
       </el-select>
       <el-switch v-model="showArchived" active-text="显示存档" @change="reload" />
       <div style="flex: 1" />
-      <el-button v-if="auth.isManager" type="primary" :icon="Plus" @click="openCreate">新建任务</el-button>
+      <el-button type="primary" :icon="Plus" @click="openCreate">新建任务</el-button>
     </div>
 
     <el-card shadow="never">
@@ -334,9 +354,36 @@ onMounted(async () => {
           <el-input v-model="form.description" type="textarea" :rows="3" />
         </el-form-item>
         <el-form-item label="负责人">
-          <el-select v-model="form.assignee_id" placeholder="选择成员" style="width: 100%">
+          <el-select
+            v-if="auth.isManager"
+            v-model="form.assignee_id"
+            placeholder="选择成员"
+            style="width: 100%"
+          >
             <el-option v-for="u in users" :key="u.id" :label="u.name" :value="u.id" />
           </el-select>
+          <el-input v-else :model-value="auth.user?.name" disabled />
+        </el-form-item>
+        <el-form-item label="协作人">
+          <el-select
+            v-model="form.collaborator_ids"
+            multiple
+            collapse-tags
+            collapse-tags-tooltip
+            placeholder="可选，选择协作成员"
+            style="width: 100%"
+          >
+            <el-option
+              v-for="u in users"
+              :key="u.id"
+              :label="u.name"
+              :value="u.id"
+              :disabled="u.id === form.assignee_id"
+            />
+          </el-select>
+          <div class="muted" style="font-size: 12px; line-height: 1.5; margin-top: 4px">
+            保存后将按负责人和每位协作人各生成一条内容相同的独立任务，各自单独跟进进展。
+          </div>
         </el-form-item>
         <el-form-item label="优先级">
           <el-radio-group v-model="form.priority">

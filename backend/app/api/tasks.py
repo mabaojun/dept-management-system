@@ -53,22 +53,41 @@ def list_tasks(
     return q.order_by(Task.updated_at.desc()).all()
 
 
-@router.post("", response_model=TaskOut, status_code=201)
+@router.post("", response_model=list[TaskOut], status_code=201)
 def create_task(
     body: TaskCreate,
-    user: User = Depends(require_roles("admin", "manager")),
+    user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
+    """全员可建任务。成员只能给自己建；管理侧可指定负责人。
+
+    指定协作人时，按「负责人 + 每位协作人」各生成一条内容相同的独立任务，
+    便于各人分别跟进自己的进展。
+    """
     if body.priority not in VALID_PRIORITY:
         raise HTTPException(status_code=400, detail="无效的优先级")
-    assignee = db.get(User, body.assignee_id)
-    if assignee is None:
+    # 成员（非管理侧）只能给自己建任务
+    assignee_id = body.assignee_id if user.role in MANAGEMENT_ROLES else user.id
+    if db.get(User, assignee_id) is None:
         raise HTTPException(status_code=400, detail="负责人不存在")
-    task = Task(**body.model_dump(), creator_id=user.id)
-    db.add(task)
+    # 协作人去重，且不与负责人重复
+    collaborator_ids = [
+        cid for cid in dict.fromkeys(body.collaborator_ids) if cid != assignee_id
+    ]
+    for cid in collaborator_ids:
+        if db.get(User, cid) is None:
+            raise HTTPException(status_code=400, detail="协作人不存在")
+
+    base = body.model_dump(exclude={"collaborator_ids"})
+    tasks = [
+        Task(**base, assignee_id=rid, creator_id=user.id)
+        for rid in (assignee_id, *collaborator_ids)
+    ]
+    db.add_all(tasks)
     db.commit()
-    db.refresh(task)
-    return task
+    for t in tasks:
+        db.refresh(t)
+    return tasks
 
 
 @router.patch("/{task_id}", response_model=TaskOut)

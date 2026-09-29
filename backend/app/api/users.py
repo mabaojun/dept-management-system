@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
-from app.core.deps import require_roles
+from app.core.deps import get_current_user, require_roles
 from app.core.security import hash_password
 from app.db.base import get_db
 from app.models import PerformanceReview, Task, User, WorkLog
@@ -13,9 +13,10 @@ router = APIRouter(prefix="/users", tags=["users"])
 
 @router.get("", response_model=list[UserOut])
 def list_users(
-    _: User = Depends(require_roles("admin", "manager")),
+    _: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
+    """全员可见成员名单（新建任务时选择协作人需要）。"""
     return db.query(User).order_by(User.id).all()
 
 

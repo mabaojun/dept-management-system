@@ -175,10 +175,20 @@ function onMenuSelect() {
   align-items: center;
   gap: 8px;
   height: 56px;
-  padding: 0 20px;
+  padding: 0 16px;
   color: #fff;
   font-size: 16px;
   font-weight: 600;
+  white-space: nowrap;
+}
+.logo span {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+}
+/* 抽屉默认内边距会挤压侧边栏内容，导致标题换行 */
+:deep(.el-drawer__body) {
+  padding: 0;
 }
 .header {
   display: flex;

@@ -17,10 +17,17 @@ cp backend/dev.db seed/dev.db
 echo "前端构建通过"
 
 # 3. 压缩（输出到项目上级目录，避免自包含）
+# 注意：.env（含 LLM 密钥）随包分发，走 scp 加密传输，避免在公网网页端明文提交密钥
 tar --exclude node_modules --exclude .venv --exclude __pycache__ \
-    --exclude 'frontend/dist' --exclude .git --exclude .env --exclude '*.pyc' \
+    --exclude 'frontend/dist' --exclude .git --exclude '*.pyc' \
     --exclude 'backend/dev.db' \
     -czf "../${NAME}.tar.gz" .
+
+if grep -q '^LLM_API_KEY=..*' .env 2>/dev/null; then
+  echo "提示：.env 已随包分发（LLM_API_KEY 已配置）"
+else
+  echo "警告：.env 中 LLM_API_KEY 为空，AI 功能将以演示模式运行"
+fi
 
 echo "打包完成：$(cd .. && pwd)/${NAME}.tar.gz"
 echo "上传命令：scp ../${NAME}.tar.gz root@服务器IP:/bumenguanli/releases/"

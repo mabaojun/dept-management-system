@@ -32,9 +32,10 @@ export const createTask = (body: {
   title: string
   description?: string
   assignee_id: number
+  collaborator_ids?: number[]
   priority?: string
   due_date?: string | null
-}) => http.post<unknown, TaskOut>('/tasks', body)
+}) => http.post<unknown, TaskOut[]>('/tasks', body)
 export const updateTask = (id: number, body: Record<string, unknown>) =>
   http.patch<unknown, TaskOut>(`/tasks/${id}`, body)
 export const deleteTask = (id: number) => http.delete<unknown, void>(`/tasks/${id}`)
