@@ -78,7 +78,7 @@ def create_task(
         if db.get(User, cid) is None:
             raise HTTPException(status_code=400, detail="协作人不存在")
 
-    base = body.model_dump(exclude={"collaborator_ids"})
+    base = body.model_dump(exclude={"collaborator_ids", "assignee_id"})
     tasks = [
         Task(**base, assignee_id=rid, creator_id=user.id)
         for rid in (assignee_id, *collaborator_ids)
